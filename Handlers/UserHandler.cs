@@ -55,7 +55,7 @@ namespace GameServer.Handlers
             }
         }
 
-        // 注册逻辑的异步方法
+        // 注册逻辑的异步方法 
         public async Task<User> RegisterAsync(WebSocket clientSocket, JObject data, CancellationToken cancellationToken)
         {
             var userName = data.Value<string>("userName");
