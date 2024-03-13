@@ -1,106 +1,182 @@
 ﻿using GameServer.Attributes;
+using GameServer.Enums;
 using GameServer.Models;
 using GameServer.Services;
+using GameServer.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
+using System.Collections.Concurrent;
 using System.Net.WebSockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GameServer.Handlers
 {
     //自动服务注册,注册为单例模式
     [Service(ServiceLifetime.Singleton)]
     //处理映射注册,注册action
-    [HandlerMapping("login")]
-    [HandlerMapping("register")]
-    [HandlerMapping("logins")]
+    [HandlerMapping(UserActions.login)]
+    [HandlerMapping(UserActions.register)]
+     
     // WebSocket消息处理器类，用于处理用户注册和登录
     /// <summary>
     /// 123123
     /// </summary>
     public class UserHandler : IHandler
     {
-        private readonly UserService _userService;
 
-        // 构造函数，通过依赖注入获取UserService服务
         /// <summary>
-        /// 
+        /// 内部类,用于同一组织管理消息头
         /// </summary>
-        /// <param name="userService"></param>
-        public UserHandler(UserService userService)
+        internal static class UserActions
         {
-            _userService = userService;
+            public const string login = "login";//登录
+            public const string register = "register";//注册  
         }
 
-        // 异步处理消息的方法
+        #region 私有内容初始化
+        private readonly UserService _userService;
+        private readonly ConnectionManager _connectionManager;
+        #endregion
+
+        /// <summary>
+        /// 构造方法
+        /// </summary>
+        /// <param name="userService">用户内容处理服务器</param>
+        public UserHandler(UserService userService, ConnectionManager connectionManager)
+        {
+            //依赖注入获得UserService服务
+            _userService = userService;
+            _connectionManager = connectionManager;
+        }
+
+
+
+        /// <summary>
+        /// 异步处理接收到的消息
+        /// </summary>
+        /// <param name="clientSocket"></param>
+        /// <param name="action"></param>
+        /// <param name="data"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task HandleMessageAsync(WebSocket clientSocket, string action, JObject data, CancellationToken cancellationToken)
         {
-         
-          
-            switch (action.ToLower())
+            //转为小写
+            action= action.ToLower();
+            switch (action)
             {
-                case "register":
-                    await RegisterAsync(clientSocket, data, cancellationToken);
+                case UserActions.register://跳转注册方法
+                    await RegisterAsync(clientSocket, data, action.ToLower(), cancellationToken);
                     break;
-                case "login":
-                    await LoginAsync(clientSocket, data, cancellationToken);
+                case UserActions.login://跳转登录方法
+                    await LoginAsync(clientSocket, data, action.ToLower(), cancellationToken);
                     break;
                 default:
-                    // 如果没有匹配的动作，返回错误信息
-                    await SendAsync(clientSocket, "未知的动作类型"); 
+                    //未知的消息 不进行处理
                     break;
             }
         }
 
-        // 注册逻辑的异步方法 
-        public async Task<User> RegisterAsync(WebSocket clientSocket, JObject data, CancellationToken cancellationToken)
+        /// <summary>
+        /// 异步用户注册逻辑
+        /// </summary>
+        /// <param name="clientSocket"></param>
+        /// <param name="data"></param>
+        /// <param name="action"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<User> RegisterAsync(WebSocket clientSocket, JObject data, string action, CancellationToken cancellationToken)
         {
-            var userName = data.Value<string>("userName");
-            var password = data.Value<string>("password");
+
 
             // 调用UserService注册用户
-            var user = _userService.Register(userName, password);
+            var user = await _userService.Register(data);
 
-            // 创建注册成功的响应消息
-            var response = JsonConvert.SerializeObject(new { action = "你注册了一个账号", success = true, userId = user.Id });
 
-            // 发送响应消息给客户端
-            await SendAsync(clientSocket, response);
+            if (user != null)
+            {
+
+                // 添加用户ID与WebSocket连接到线程安全的字典
+                _connectionManager.TryAdd(user.Id, clientSocket); // 使用TryAdd确保添加操作的原子性
+
+
+                // 将user对象序列化为JObject
+                var jObject = JObject.FromObject(user);
+                // 添加一个额外的自定义属性到此JObject
+                jObject["message"] ="注册成功";
+
+                var websocketmessage = new WebSocketMessage() {
+                Action = action,
+                Data= jObject
+                };
+               
+
+                // 发送响应消息给客户端
+                await MessageHelper.SendAsync(clientSocket, websocketmessage.Serialize(), cancellationToken);
+            }
+            else
+            {
+                // 发送响应消息给客户端
+                await MessageHelper.SendErrorAsync(clientSocket, action, ErrorEnum.用户名已存在, cancellationToken);
+            }
 
             return user;
         }
 
-        // 登录逻辑的异步方法
-        public async Task<User> LoginAsync(WebSocket clientSocket, JObject data, CancellationToken cancellationToken)
+        /// <summary>
+        /// 异步用户登录逻辑,增加了单账号登录的实现
+        /// </summary>
+        /// <param name="clientSocket"></param>
+        /// <param name="data"></param>
+        /// <param name="action"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<User> LoginAsync(WebSocket clientSocket, JObject data, string action, CancellationToken cancellationToken)
         {
-            var userName = data.Value<string>("userName");
-            var password = data.Value<string>("password");
 
             // 调用UserService登录用户
-            var user = _userService.Login(userName, password);
+            var user = await _userService.Login(data);
 
-            // 根据登录结果，创建响应消息
-            var response = JsonConvert.SerializeObject(new { action = "你登录了一个账号", success = user != null, userId = user?.Id });
 
-            // 发送响应消息给客户端
-            await SendAsync(clientSocket, response);
+            // 检查用户是否成功登录
+            if (user != null)
+            {
+                // 检查如果拥有旧的连接,踢掉旧的连接,并更字典新成新连接
+                if (_connectionManager.TryGet(user.Id, out WebSocket oldSocket))
+                {
+                    
+                        // 如果旧的WebSocket连接存在且处于打开状态，先关闭它
+                        if (oldSocket.State == WebSocketState.Open && oldSocket != clientSocket)
+                        {
+                            await oldSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, ErrorEnum.账号在其它地方登录.ToString(), cancellationToken);
+                        }
+                    // 移除旧的连接映射
+                    _connectionManager.TryRemove(user.Id, out _);  // 使用 TryRemove 安全地移除键值对
+                }
+                // 添加用户ID与WebSocket连接到线程安全的字典
+                _connectionManager.TryAdd(user.Id, clientSocket); // 使用TryAdd确保添加操作
+
+                //编辑返回的数据
+                var message = new WebSocketMessage()
+                {
+                    Action = action,
+                    Data = new JObject()
+                    {
+                        ["userId"] = user.Id
+                    }
+                };
+
+                // 发送响应消息给客户端
+                await MessageHelper.SendAsync(clientSocket, message.Serialize(), cancellationToken);
+            }
+            //登录失败
+            else
+            {
+                // 发送错误消息给客户端
+                await MessageHelper.SendErrorAsync(clientSocket, action, ErrorEnum.用户名或密码不正确, cancellationToken);
+            }
             return user;
         }
 
-        // 发送消息的共享异步方法
-        private async Task SendAsync(WebSocket clientSocket, string message)
-        {
-            if (clientSocket.State != WebSocketState.Open)
-                return;
-
-            // 将消息字符串转换成字节数据
-            var buffer = Encoding.UTF8.GetBytes(message);
-
-            // 异步发送消息到客户端
-            await clientSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, System.Threading.CancellationToken.None);
-        }
     }
 }

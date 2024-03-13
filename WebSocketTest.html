@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>WebSocket 测试页面</title>
+<style>
+    body {
+        font-family: "Arial", sans-serif;
+        padding: 20px;
+        background-color: #f5f5f5;
+    }
+    #controls {
+        margin-bottom: 10px;
+    }
+    #messageBox {
+        width: 100%;
+        height: 300px;
+        border: 1px solid #333;
+        background-color: black;
+        overflow-y: scroll;
+        padding: 5px;
+        box-sizing: border-box;
+    }
+    .message {
+        padding: 3px 0;
+	border-bottom: 1px solid #333;
+    }
+    .sent {
+        color: white;
+    }
+    .received {
+        color:lime ;
+    }
+</style>
+</head>
+<body>
+
+    WebSocket服务器地址：<input type="text" id="serverUrl" value="ws://localhost:12345" />
+    用户名：<input type="text" id="username" value="" placeholder="请输入用户名" />
+    密码：<input type="text" id="password" value="" placeholder="请输入密码" />
+
+    <button id="connectBtn">连接服务器</button>
+
+    <button id="registerBtn">注册</button>
+    <button id="loginBtn">登录</button>
+    <button id="disconnectBtn" disabled>断开连接</button>
+    <button id="stopHeartbeatBtn" disabled>暂停心跳</button>
+    <div id="latencyDisplay">延迟：0ms</div>
+
+    <div id="messageBox"></div>
+
+    <script>
+        var websocket;
+        var heartbeatIntervalId;
+        var isHeartbeatPaused = false;
+
+        document.getElementById('registerBtn').addEventListener('click', function () {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                var username = document.getElementById('username').value;
+                var password = document.getElementById('password').value;
+                var loginMessage = {
+                    action: 'register',
+                    data: {
+                        username: username,
+                        password: password
+                    }
+                };
+                websocket.send(JSON.stringify(loginMessage));
+                addMessage('已发送注册信息。', 'sent');
+            } else {
+                addMessage('WebSocket未连接。', 'sent');
+            }
+        });
+
+        document.getElementById('loginBtn').addEventListener('click', function () {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                var username = document.getElementById('username').value;
+                var password = document.getElementById('password').value;
+                var loginMessage = {
+                    action: 'login',
+                    data: {
+                        username: username,
+                        password: password
+                    }
+                };
+                websocket.send(JSON.stringify(loginMessage));
+                addMessage('已发送登录信息。', 'sent');
+            } else {
+                addMessage('WebSocket未连接。', 'sent');
+            }
+        });
+
+
+
+        document.getElementById('connectBtn').addEventListener('click', function () {
+            var serverAddress = document.getElementById('serverUrl').value;
+            websocket = new WebSocket(serverAddress);
+
+            websocket.onopen = function () {
+                document.getElementById('connectBtn').disabled = true;
+                document.getElementById('disconnectBtn').disabled = false;
+                document.getElementById('stopHeartbeatBtn').disabled = false;
+                addMessage('已连接服务器。', 'sent');
+                startHeartbeat();
+            };
+
+            websocket.onclose = function (event) {
+                document.getElementById('connectBtn').disabled = false;
+                document.getElementById('disconnectBtn').disabled = true;
+                addMessage('连接已断开:'+event.reason, 'sent');
+                clearInterval(heartbeatIntervalId);
+                isHeartbeatPaused = false;
+                document.getElementById('stopHeartbeatBtn').disabled = true;
+                document.getElementById('stopHeartbeatBtn').textContent = '暂停心跳';
+            };
+
+            websocket.onmessage = function (event) {
+                addMessage('收到服务器消息：' + event.data, 'received');
+                var eventData = JSON.parse(event.data);
+                if (eventData.action === 'heartbeat') {
+                    var latency = Date.now() - eventData.data.timestamp;
+                    document.getElementById('latencyDisplay').textContent = '延迟：' + latency + 'ms';
+                }
+            };
+
+            websocket.onerror = function () {
+                clearInterval(heartbeatIntervalId);
+                isHeartbeatPaused = false;
+                document.getElementById('stopHeartbeatBtn').disabled = true;
+                document.getElementById('stopHeartbeatBtn').textContent = '暂停心跳';
+                addMessage('WebSocket出现错误。', 'sent');
+            };
+        });
+
+        document.getElementById('disconnectBtn').addEventListener('click', function () {
+            if (websocket) {
+                websocket.close();
+            }
+        });
+
+        document.getElementById('stopHeartbeatBtn').addEventListener('click', function () {
+            if (!isHeartbeatPaused) {
+                clearInterval(heartbeatIntervalId);
+                isHeartbeatPaused = true;
+                this.textContent = '恢复心跳';
+            } else {
+                startHeartbeat();
+                isHeartbeatPaused = false;
+                this.textContent = '暂停心跳';
+            }
+        });
+
+        function addMessage(message, type) {
+            var messageElement = document.createElement('div');
+            messageElement.innerHTML = message;
+            messageElement.classList.add('message', type);
+            document.getElementById('messageBox').appendChild(messageElement);
+            document.getElementById('messageBox').scrollTop = document.getElementById('messageBox').scrollHeight;
+        }
+
+        function startHeartbeat() {
+            heartbeatIntervalId = setInterval(function () {
+
+                var heartbeat = { action: 'heartbeat', data: { timestamp: Date.now() } };
+                websocket.send(JSON.stringify(heartbeat));
+                addMessage('发送到服务器：' + JSON.stringify(heartbeat), 'sent');
+            }, 10000); // 每10秒发送一次心跳
+        }
+    </script>
+
+</body>
+</html>

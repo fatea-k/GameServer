@@ -26,6 +26,22 @@ namespace GameServer
             // 使用容器运行你的 WebSocket 服务器
             var server = ServiceProvider.GetRequiredService<WebSocketServer>();
             _ = server.Start();
+#if DEBUG
+            // 确保路径是相对于执行程序的工作目录的
+            string filePath = Path.Combine(Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\")), "WebSocketTest.html");
+
+            // 文件存在性检查
+            if (File.Exists(filePath))
+            {
+                // 如果存在，则使用默认浏览器打开
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });
+
+            }
+            else
+            {
+                Console.WriteLine("WebSocketTest.html 未找到"+ filePath);
+            }
+#endif
             while (true)
             {
                 // 可以在此处添加服务器运行时需要执行的代码
