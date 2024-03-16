@@ -11,6 +11,7 @@
     <None Remove=".gitattributes" />
     <None Remove=".gitignore" />
     <None Remove="LICENSE.txt" />
+    <None Remove="Utilities\mvvasek3.inm~" />
   </ItemGroup>
 
   <ItemGroup>
