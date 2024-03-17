@@ -1,185 +1,222 @@
-﻿using System;
+﻿using GameServer.Enums; // 使用自定义枚举
+using GameServer.Models; // 使用游戏服务器模型
+using System.Net.WebSockets; // WebSocket相关命名空间
 using System.Text;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using System.Net.WebSockets;
-using GameServer.Enums;
-using GameServer.Models;
+using System.Threading.Channels; // Channel相关命名空间
 
-// 游戏服务器的命名空间
+// 定义游戏服务器的命名空间
 namespace GameServer.Utilities
 {
-    // WebSocket消息助手类，用于管理消息的接收和发送
+    /// <summary>
+    /// WebSocket消息助手类，用于管理消息的异步广播与发送。
+    /// </summary>
     public class MessageHelper
     {
-        // 用于缓存消息的通道
-        private readonly Channel<(WebSocket clientSocket, string message)> _messagesChannel;
+        // 定义一个通道，用于缓存WebSocket发送的消息
+        private readonly Channel<MessageContent> _messagesChannel;
 
-        // 标记是否有消息批处理正在进行
+        // 标记是否有消息正在被处理
         private bool _isProcessingBatch;
 
-        // 定时器，用于控制消息的定时发送
+        // 定时器，用于在设定的间隔后处理消息
         private readonly Timer _timer;
 
-        // 消息批处理的最大尺寸
+        // 定义一次处理消息的最大批次大小
         private readonly int _maxBatchSize;
 
-        // 用于取消操作的CancellationTokenSource
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        // 创建CancellationTokenSource，用于处理取消操作
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-        // 时间间隔变量，用于定时器的时间间隔设置
+        // 定义处理消息的时间间隔
         private TimeSpan _batchInterval;
 
-        // 最小时间间隔阈值设为5毫秒
+        // 设置处理消息的最小时间间隔
         private readonly TimeSpan _minBatchInterval = TimeSpan.FromMilliseconds(5);
 
-        // 最大时间间隔阈值设为100毫秒
+        // 设置处理消息的最大时间间隔
         private readonly TimeSpan _maxBatchInterval = TimeSpan.FromMilliseconds(100);
 
-        // 构造函数，设置消息批处理的最大尺寸
+        /// <summary>
+        /// 自定义的消息内容类，支持广播和单独消息发送。
+        /// </summary>
+        private class MessageContent
+        {
+            public IEnumerable<WebSocket> Sockets { get; set; } // 目标客户端WebSocket集合
+            public string Message { get; set; } // 要发送的消息内容
+            public bool IsBroadcast { get; set; } // 指示是否为广播消息
+        }
+
+        /// <summary>
+        /// 初始化MessageHelper的新实例。
+        /// </summary>
+        /// <param name="maxBatchSize">单次消息处理的最大批次大小。</param>
         public MessageHelper(int maxBatchSize)
         {
             _maxBatchSize = maxBatchSize;
-            _messagesChannel = Channel.CreateUnbounded<(WebSocket clientSocket, string message)>();
-            _isProcessingBatch = false;
-            // 初始化定时器，设置为不自动启动
-            _timer = new Timer(TimerCallback, null, Timeout.Infinite, Timeout.Infinite);
+            _messagesChannel = Channel.CreateUnbounded<MessageContent>(); // 创建无界消息通道
+            _timer = new Timer(TimerCallback, null, Timeout.Infinite, Timeout.Infinite); // 初始化定时器，配置转为空闲状态
         }
 
-        // 添加消息到队列的方法，可以设置用户自定义的时间间隔和取消标记
-        public async Task QueueMessageAsync(WebSocket clientSocket, string message, CancellationToken externalCancellationToken, TimeSpan? userDefinedInterval = null)
+        /// <summary>
+        /// 把消息异步放入队列中，并安排发送时间。
+        /// </summary>
+        /// <param name="sockets">目标WebSocket对象集合。</param>
+        /// <param name="message">要发送的消息。</param>
+        /// <param name="externalCancellationToken">用于外部取消操作的CancellationToken。</param>
+        /// <param name="userDefinedInterval">用户定义的消息处理时间间隔。</param>
+        /// <param name="isBroadcast">指示消息是否需要广播。</param>
+        /// <returns>Task表示异步操作的状态。</returns>
+        public async Task QueueMessageAsync(IEnumerable<WebSocket> sockets, string message, CancellationToken externalCancellationToken, TimeSpan? userDefinedInterval = null, bool isBroadcast = false)
         {
-            // 如果传入的外部CancellationToken被取消，则同时取消类内部CancellationTokenSource
+            // 当外部请求取消时，使用CancellationTokenSource发出取消信号
             externalCancellationToken.Register(() => _cancellationTokenSource.Cancel());
 
-            // 调整时间间隔，如果用户指定了时间间隔参数，则自动调整时间间隔，否则使用默认的最大时间间隔
-            //如果用户没有给定时间,使用默认值,否则使用用户指定的时间
+            // 根据用户定义的间隔设置时间间隔，或者使用最大间隔
             _batchInterval = userDefinedInterval ?? _maxBatchInterval;
-
-            //                                           和min值比对选最大,                                         和max值比对选最小
+            // 保证间隔时间在最小和最大值之间
             _batchInterval = (_batchInterval < _minBatchInterval) ? _minBatchInterval : (_batchInterval > _maxBatchInterval) ? _maxBatchInterval : _batchInterval;
 
-            // 将消息添加到消息通道中
-            await _messagesChannel.Writer.WriteAsync((clientSocket, message), _cancellationTokenSource.Token);
+            // 创建一个消息内容对象并放入通道中
+            await _messagesChannel.Writer.WriteAsync(new MessageContent
+            {
+                Sockets = sockets,
+                Message = message,
+                IsBroadcast = isBroadcast
+            }, _cancellationTokenSource.Token);
 
-            // 如果当前没有消息批处理正在进行，则启动消息处理
+            // 如果当前没有消息正在处理，则开始处理流程
             if (!_isProcessingBatch)
             {
                 _isProcessingBatch = true;
-                _timer.Change(_batchInterval, Timeout.InfiniteTimeSpan);//启动计时器
-                // 异步执行消息处理
-                _ = ProcessMessagesAsync(_cancellationTokenSource.Token);
-            }
-        }
-        // 从消息通道读取并处理消息的异步方法
-        private async Task ProcessMessagesAsync(CancellationToken cancellationToken)
-        {
-            var batchBuilder = new StringBuilder(); // 用于构建消息批次的StringBuilder
-            int currentBatchSize = 0; // 当前批次消息的总字节大小
-
-            // 等待并读取通道中的消息
-            await foreach (var (socket, message) in _messagesChannel.Reader.ReadAllAsync(cancellationToken))
-            {
-                // 检查取消标志
-                cancellationToken.ThrowIfCancellationRequested();
-
-                int messageSize = Encoding.UTF8.GetByteCount(message); // 获取当前消息的大小
-                currentBatchSize += messageSize; // 累加到批次大小
-
-                // 如果当前消息批次大小超过了设置的最大值
-                if (currentBatchSize >= _maxBatchSize)
-                {
-                    // 发送累积的消息
-                    await SendAsync(socket, batchBuilder.ToString(), cancellationToken);
-                    // 清空StringBuilder，准备接收下一批次的消息
-                    batchBuilder.Clear();
-                    // 重置当前批次大小
-                    currentBatchSize = 0;
-                    // 批处理完成，停止定时器，并标记_isProcessingBatch为false
-                    _timer.Change(Timeout.Infinite, Timeout.Infinite);//停止计时器,防止触发同一个消息批次的发送
-                    _isProcessingBatch = false;
-                }
-                // 如果不需要发送，则继续累积消息到StringBuilder
-                else
-                {
-                    batchBuilder.AppendLine(message);
-                }
+                _timer.Change(_batchInterval, Timeout.InfiniteTimeSpan); // 启动定时器
+                _ = ProcessMessagesAsync(_cancellationTokenSource.Token); // 开始异步处理消息
             }
         }
 
-        // 定时器回调方法，用于处理超过最大时间间隔的消息
+        // 定时器回调函数
         private void TimerCallback(object state)
         {
-            // 使用类内部的CancellationToken进行操作取消检查
-            var cancellationToken = _cancellationTokenSource.Token;
-
-            // 检查通道中是否有待处理的消息
-            if (_messagesChannel.Reader.TryRead(out var item))
+            // 如果没有取消请求，尝试处理消息
+            if (!_cancellationTokenSource.IsCancellationRequested)
             {
-                var (clientSocket, message) = item;
-
-                // 创建一个新的任务来处理消息的发送
-                Task.Run(async () =>
+                // 尝试从通道中读取一条待处理的消息
+                if (_messagesChannel.Reader.TryRead(out var messageContent))
                 {
-                    // 检查取消标志
-                    cancellationToken.ThrowIfCancellationRequested();
+                    // 根据消息是否是广播，使用相应的处理逻辑
+                    var task = messageContent.IsBroadcast ?
+                        BroadcastMessageAsync(messageContent.Sockets, messageContent.Message, _cancellationTokenSource.Token) : // 广播消息
+                        SendAsync(messageContent.Sockets.First(), messageContent.Message, _cancellationTokenSource.Token); // 单独发送消息
 
-                    // 发送消息
-                    await SendAsync(clientSocket, message, cancellationToken);
-                }, cancellationToken).ContinueWith(t =>
+                    // 开始任务并等待其完成
+                    Task.Run(async () => await task);
+                    _isProcessingBatch = false; // 完成后更新处理标记
+                }
+                else
                 {
-                    // 捕获可能发生的任务取消异常
-                    if (t.IsCanceled)
+                    _isProcessingBatch = false; // 如果没有消息则更新标记
+                }
+            }
+        }
+
+        // 处理消息队列中的任务
+        private async Task ProcessMessagesAsync(CancellationToken cancellationToken)
+        {
+            // 使用异步遍历处理所有消息
+            await foreach (var messageContent in _messagesChannel.Reader.ReadAllAsync(cancellationToken))
+            {
+                // 如果请求了取消，则抛出异常中断操作
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // 根据消息是广播还是单独发送，选择相应处理逻辑
+                if (messageContent.IsBroadcast)
+                {
+                    // 广播消息给所有客户端
+                    await BroadcastMessageAsync(messageContent.Sockets, messageContent.Message, cancellationToken);
+                }
+                else
+                {
+                    // 单独发送消息给每个客户端
+                    foreach (var socket in messageContent.Sockets)
                     {
-                        // 这里可以根据具体需要进行处理，如记录日志等
+                        await SendAsync(socket, messageContent.Message, cancellationToken);
                     }
-                });
+                }
             }
-            // 标记当前没有消息批处理任务在执行
-            _isProcessingBatch = false;
         }
 
-        // 异步发送WebSocket消息的助手方法
-        public static async Task SendAsync(WebSocket clientSocket, string message, CancellationToken cancellationToken)
+        // 广播消息到所有WebSocket客户端
+        private async Task BroadcastMessageAsync(IEnumerable<WebSocket> sockets, string message, CancellationToken cancellationToken)
         {
-            if (clientSocket.State == WebSocketState.Open)
+            // 为每个客户端创建发送任务
+            var tasks = sockets.Select(socket => SendAsync(socket, message, cancellationToken));
+            // 等待所有发送任务完成
+            await Task.WhenAll(tasks);
+        }
+
+        /// <summary>
+        /// 广播消息到列表中的所有WebSocket客户端。
+        /// </summary>
+        /// <param name="message">要广播的消息。</param>
+        /// <param name="sockets">目标WebSocket集合。</param>
+        /// <param name="useParallel">是否使用并行发送。</param>
+        /// <param name="cancellationToken">用于操作取消的CancellationToken。</param>
+        /// <returns>Task表示异步操作的状态。</returns>
+        public async Task BroadcastAsync(string message, IEnumerable<WebSocket> sockets, bool useParallel, CancellationToken cancellationToken)
+        {
+            if (useParallel)
             {
-                var buffer = Encoding.UTF8.GetBytes(message);
-                var segment = new ArraySegment<byte>(buffer);
-                // 异步发送消息，等待完成
-                await clientSocket.SendAsync(segment, WebSocketMessageType.Text, true, cancellationToken);
+                // 并行发送消息到所有客户端
+                await Task.WhenAll(sockets.Select(socket => SendAsync(socket, message, cancellationToken)));
+            }
+            else
+            {
+                // 顺序发送消息到每个客户端
+                foreach (var socket in sockets)
+                {
+                    await SendAsync(socket, message, cancellationToken);
+                }
             }
         }
 
-        // 封装发送错误消息的方法
-        public static async Task SendErrorAsync(WebSocket clientSocket, string action, ErrorEnum errorEnum, CancellationToken cancellationToken)
+        // 发送单条消息到指定的WebSocket客户端
+        public static async Task SendAsync(WebSocket socket, string message, CancellationToken cancellationToken)
         {
+            // 确保WebSocket连接处于打开状态
+            if (socket.State == WebSocketState.Open)
+            {
+                // 将消息编码为字节数组
+                var buffer = Encoding.UTF8.GetBytes(message);
+                // 发送消息
+                await socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, cancellationToken);
+            }
+        }
+
+        // 发送错误信息到指定的WebSocket客户端
+        public static async Task SendErrorAsync(WebSocket socket, string action, ErrorEnum errorEnum, CancellationToken cancellationToken)
+        {
+            // 构造错误消息
             var message = new WebSocketMessage
             {
                 Action = action,
-                Error = errorEnum //错误枚举
+                Error = errorEnum
             };
-            await SendAsync(clientSocket, message.Serialize(), cancellationToken);
+            // 发送错误消息
+            await SendAsync(socket, message.Serialize(), cancellationToken);
         }
 
-        // 停止并清理消息助手，释放资源
+        // 停止消息处理并清理资源
         public void Stop()
         {
-            // 触发取消操作
+            // 发出取消请求
             _cancellationTokenSource.Cancel();
-
-            // 停止定时器
+            // 停止定时器，释放资源
             _timer.Change(Timeout.Infinite, Timeout.Infinite);
             _timer.Dispose();
-
-            // 完成消息通道的写入
+            // 关闭消息通道
             _messagesChannel.Writer.Complete();
-
-            // 清除CancellationTokenSource
+            // 清理CancellationTokenSource
             _cancellationTokenSource.Dispose();
-
-            // 标记当前没有消息批处理任务在执行
+            // 重置处理消息的标记
             _isProcessingBatch = false;
         }
     }
