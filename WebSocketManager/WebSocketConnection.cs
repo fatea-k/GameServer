@@ -8,7 +8,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using GameServer.Services;
-using GameServer.Utilities; // 这需要您有一个处理用户登录的服务类
+using GameServer.Utilities;
+using GameServer.Manager; // 这需要您有一个处理用户登录的服务类
 
 
 
@@ -65,8 +66,9 @@ namespace GameServer.WebSocketManager
                     {
                         // 将接收到的字节序列转换为字符串消息
                         var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                        var socketcode = _webSocket.GetHashCode();
                         // 输出接收到的消息
-                        Console.WriteLine($"接收到消息: {message}");
+                        Console.WriteLine($"接收到消息:{socketcode}: {message}");
 
                         // 解析消息为JSON对象
                         dynamic json = JsonConvert.DeserializeObject(message);
@@ -141,6 +143,7 @@ namespace GameServer.WebSocketManager
             DisposeHeartbeatTimer();//清除计时器
             if (_webSocket.State != WebSocketState.Closed)
             {
+                ConnectionManager.RemoveConnectionByWebSocket(_webSocket);
                 await _webSocket.CloseAsync(closeStatus, errmessage, cancellationToken);
             }
 

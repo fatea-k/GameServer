@@ -23,7 +23,7 @@ namespace GameServer
 
                 .BuildServiceProvider(); // 生成实际的服务提供器，以便在整个应用中使用
 
-            // 使用容器运行你的 WebSocket 服务器
+            // 使用容器运行WebSocket 服务器
             var server = ServiceProvider.GetRequiredService<WebSocketServer>();
             _ = server.Start();
 #if DEBUG

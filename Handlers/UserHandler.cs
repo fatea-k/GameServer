@@ -1,5 +1,6 @@
 ﻿using GameServer.Attributes;
 using GameServer.Enums;
+using GameServer.Manager;
 using GameServer.Models;
 using GameServer.Services;
 using GameServer.Utilities;
@@ -87,40 +88,50 @@ namespace GameServer.Handlers
         /// <returns></returns>
         public async Task<User> RegisterAsync(WebSocket clientSocket, JObject data, string action, CancellationToken cancellationToken)
         {
+            //检查字典中是否有该链接
 
-
-            // 调用UserService注册用户
-            var user = await _userService.Register(data);
-
-
-            if (user != null)
+          var guid=  ConnectionManager.GetUserIdByConnection(clientSocket);
+            if (guid == Guid.Empty)
             {
+                // 调用UserService注册用户
+                var user = await _userService.Register(data);
 
-                // 添加用户ID与WebSocket连接到线程安全的字典
-                _connectionManager.TryAdd(user.Id, clientSocket); // 使用TryAdd确保添加操作的原子性
+                if (user != null)
+                {
+                    // 添加用户ID与WebSocket连接到线程安全的字典
+                    ConnectionManager.AddConcurrent(user.Id, clientSocket); // 使用TryAdd确保添加操作的原子性
 
 
-                // 将user对象序列化为JObject
-                var jObject = JObject.FromObject(user);
-                // 添加一个额外的自定义属性到此JObject
-                jObject["message"] ="注册成功";
+                    // 将user对象序列化为JObject
+                    var jObject = JObject.FromObject(user);
+                    // 添加一个额外的自定义属性到此JObject
+                    jObject["message"] = "注册成功";
 
-                var websocketmessage = new WebSocketMessage() {
-                Action = action,
-                Data= jObject
-                };
-               
+                    var websocketmessage = new WebSocketMessage()
+                    {
+                        Action = action,
+                        Data = jObject
+                    };
+                    // 发送响应消息给客户端
+                    await MessageHelper.SendAsync(clientSocket, websocketmessage.Serialize(), cancellationToken);
+                }
+                else
+                {
+                    // 发送响应消息给客户端
+                    await MessageHelper.SendErrorAsync(clientSocket, action, ErrorEnum.用户名已存在, cancellationToken);
+                }
 
-                // 发送响应消息给客户端
-                await MessageHelper.SendAsync(clientSocket, websocketmessage.Serialize(), cancellationToken);
+                return user;
             }
             else
             {
+                //当已字典中已存在,返回一个错误消息
                 // 发送响应消息给客户端
-                await MessageHelper.SendErrorAsync(clientSocket, action, ErrorEnum.用户名已存在, cancellationToken);
+                await MessageHelper.SendErrorAsync(clientSocket, action, ErrorEnum.无法注册, cancellationToken);
+                return null;
             }
 
-            return user;
+           
         }
 
         /// <summary>
@@ -142,19 +153,9 @@ namespace GameServer.Handlers
             if (user != null)
             {
                 // 检查如果拥有旧的连接,踢掉旧的连接,并更字典新成新连接
-                if (_connectionManager.TryGet(user.Id, out WebSocket oldSocket))
-                {
-                    
-                        // 如果旧的WebSocket连接存在且处于打开状态，先关闭它
-                        if (oldSocket.State == WebSocketState.Open && oldSocket != clientSocket)
-                        {
-                            await oldSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, ErrorEnum.账号在其它地方登录.ToString(), cancellationToken);
-                        }
-                    // 移除旧的连接映射
-                    _connectionManager.TryRemove(user.Id, out _);  // 使用 TryRemove 安全地移除键值对
-                }
+
                 // 添加用户ID与WebSocket连接到线程安全的字典
-                _connectionManager.TryAdd(user.Id, clientSocket); // 使用TryAdd确保添加操作
+                ConnectionManager.AddConcurrent(user.Id, clientSocket); // 使用TryAdd确保添加操作
 
                 //编辑返回的数据
                 var message = new WebSocketMessage()
