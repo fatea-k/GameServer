@@ -14,7 +14,7 @@ namespace GameServer.Manager
     public class ConnectionManager
     {
         //采用正反字典以保证数据的一致性,缺点占用了一部分内存
-        private static  readonly ConcurrentDictionary<Guid, WebSocket> _userConnections = new ConcurrentDictionary<Guid, WebSocket>();
+        private static  readonly ConcurrentDictionary<string, WebSocket> _userConnections = new ConcurrentDictionary<string, WebSocket>();
 
 
 
@@ -24,7 +24,7 @@ namespace GameServer.Manager
         /// <param name="userId">用户id</param>
         /// <param name="webSocket">用户连接</param>
         /// <returns></returns>
-        public static void AddConcurrent(Guid userId, WebSocket webSocket)
+        public static void AddConcurrent(string userId, WebSocket webSocket)
         {
 
            
@@ -47,7 +47,7 @@ namespace GameServer.Manager
         /// </summary>
         /// <param name="userId">用户id</param>
         /// <returns></returns>
-        public static WebSocket GetWebSocketByUserId(Guid userId)
+        public static WebSocket GetWebSocketByUserId(string userId)
         {
 
             _userConnections.TryGetValue(userId, out WebSocket webSocket);
@@ -57,7 +57,7 @@ namespace GameServer.Manager
         /// 根据用户id移除连接
         /// </summary>
         /// <param name="userId"></param>
-        public static void RemoveConnectionByUserId(Guid userId)
+        public static void RemoveConnectionByUserId(string userId)
         {
             _userConnections.TryRemove(userId, out var _);  // 移除连接，忽略移除的结果
         }
@@ -67,10 +67,10 @@ namespace GameServer.Manager
         /// <param name="webSocket"></param>
         public static void RemoveConnectionByWebSocket(WebSocket webSocket)
         {
-            var guid = GetUserIdByConnection(webSocket);
-            if(guid != Guid.Empty)
+            var userId = GetUserIdByConnection(webSocket);
+            if(userId !=String.Empty)
             {
-                _userConnections.TryRemove(guid, out var _);  // 移除连接，忽略移除的结果
+                _userConnections.TryRemove(userId, out var _);  // 移除连接，忽略移除的结果
 
             }
             var code = webSocket.GetHashCode();
@@ -85,15 +85,15 @@ namespace GameServer.Manager
         /// </summary>
         /// <param name="webSocket">用户连接</param>
         /// <returns></returns>
-        public static Guid GetUserIdByConnection(WebSocket webSocket)
+        public static string GetUserIdByConnection(WebSocket webSocket)
         {
             var userId = _userConnections.FirstOrDefault(pair => pair.Value == webSocket).Key;
-            if (userId != Guid.Empty)
+            if (userId != String.Empty)
             {
                 return userId;
             }
 
-            return Guid.Empty; // 未找到对应UserId则返回null
+            return String.Empty; // 未找到对应UserId则返回null
         }
 
         /// <summary>

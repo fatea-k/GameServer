@@ -1,6 +1,7 @@
 ﻿using GameServer.Attributes;
 using GameServer.Enums;
 using GameServer.Manager;
+using GameServer.Managers;
 using GameServer.Models;
 using GameServer.Services;
 using GameServer.Utilities;
@@ -89,9 +90,9 @@ namespace GameServer.Handlers
         public async Task<User> RegisterAsync(WebSocket clientSocket, JObject data, string action, CancellationToken cancellationToken)
         {
             //检查字典中是否有该链接
+          var userId=  ConnectionManager.GetUserIdByConnection(clientSocket);
 
-          var guid=  ConnectionManager.GetUserIdByConnection(clientSocket);
-            if (guid == Guid.Empty)
+            if (string.IsNullOrEmpty(userId))
             {
                 // 调用UserService注册用户
                 var user = await _userService.Register(data);
@@ -105,20 +106,21 @@ namespace GameServer.Handlers
                     // 将user对象序列化为JObject
                     var jObject = JObject.FromObject(user);
                     // 添加一个额外的自定义属性到此JObject
-                    jObject["message"] = "注册成功";
+                    jObject["message"] = "用户"+user.Id+"登录了";
 
                     var websocketmessage = new WebSocketMessage()
                     {
                         Action = action,
                         Data = jObject
                     };
+
                     // 发送响应消息给客户端
-                    await MessageHelper.SendAsync(clientSocket, websocketmessage.Serialize(), cancellationToken);
+                   await Clients.All.SendAsync(websocketmessage.Serialize(),0,0, cancellationToken);
                 }
                 else
                 {
                     // 发送响应消息给客户端
-                    await MessageHelper.SendErrorAsync(clientSocket, action, ErrorEnum.用户名已存在, cancellationToken);
+                    await Clients.SendErrorAsync(clientSocket, action, ErrorEnum.用户名已存在, cancellationToken);
                 }
 
                 return user;
@@ -127,7 +129,7 @@ namespace GameServer.Handlers
             {
                 //当已字典中已存在,返回一个错误消息
                 // 发送响应消息给客户端
-                await MessageHelper.SendErrorAsync(clientSocket, action, ErrorEnum.无法注册, cancellationToken);
+                await Clients.SendErrorAsync(clientSocket, action, ErrorEnum.无法注册, cancellationToken);
                 return null;
             }
 
@@ -168,13 +170,13 @@ namespace GameServer.Handlers
                 };
 
                 // 发送响应消息给客户端
-                await MessageHelper.SendAsync(clientSocket, message.Serialize(), cancellationToken);
+                await Clients.SendAsync(clientSocket, message.Serialize(), cancellationToken);
             }
             //登录失败
             else
             {
                 // 发送错误消息给客户端
-                await MessageHelper.SendErrorAsync(clientSocket, action, ErrorEnum.用户名或密码不正确, cancellationToken);
+                await Clients.SendErrorAsync(clientSocket, action, ErrorEnum.用户名或密码不正确, cancellationToken);
             }
             return user;
         }

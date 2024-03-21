@@ -6,7 +6,7 @@ namespace GameServer.Models
     public class User
     {
         [JsonProperty("id")]
-        public Guid Id { get; set; } // 用户唯一标识符
+        public string Id { get; set; } // 用户唯一标识符
         [JsonProperty("username")]
         public string UserName { get; set; } // 用户名
         [JsonIgnore]
@@ -16,7 +16,7 @@ namespace GameServer.Models
         // 构造方法
         public User(string username, string password)
         {
-            Id = Guid.NewGuid(); // 自动生成用户ID
+            Id = Guid.NewGuid().ToString(); // 自动生成用户ID
             UserName = username;
             Password = password;
         }

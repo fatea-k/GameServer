@@ -9,7 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using GameServer.Services;
 using GameServer.Utilities;
-using GameServer.Manager; // 这需要您有一个处理用户登录的服务类
+using GameServer.Manager;
+using GameServer.Managers; // 这需要您有一个处理用户登录的服务类
 
 
 
@@ -80,7 +81,7 @@ namespace GameServer.WebSocketManager
                             // 创建注册成功的响应消息.返回时间戳,用于计算延迟
                             var response = JsonConvert.SerializeObject(new { action = "heartbeat", data = new { timestamp = (long)(DateTime.UtcNow - DateTimeOffset.UnixEpoch).TotalMilliseconds } });
 
-                            await MessageHelper.SendAsync(_webSocket, response, cancellationToken);
+                            await Clients.SendAsync(_webSocket, response, cancellationToken);
                         }
                         // 检查动作是否为登录或注册，这些动作需要特殊处理
                         else if (action == "login" || action == "register")
@@ -103,7 +104,7 @@ namespace GameServer.WebSocketManager
                             else
                             {
                                 Console.WriteLine($"未找到 action '{action}' 对应的 Handler。");
-                                await MessageHelper.SendAsync(_webSocket, $"未知操作: {action}", cancellationToken);
+                                await Clients.SendAsync(_webSocket, $"未知操作: {action}", cancellationToken);
                             }
 
                         }
