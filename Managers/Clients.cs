@@ -12,6 +12,7 @@
 using GameServer.Enums;
 using GameServer.Manager;
 using GameServer.Models;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Net.Sockets;
 using System.Net.WebSockets;
@@ -50,10 +51,15 @@ namespace GameServer.Managers
         // 封装发送错误消息的方法
         public static async Task SendErrorAsync(WebSocket clientSocket, string action, ErrorEnum errorEnum, CancellationToken cancellationToken)
         {
-            var message = new WebSocketMessage
+            var message = new WSMessage
             {
                 Action = action,
-                Error = errorEnum //错误枚举
+                Error = errorEnum,//错误枚举
+                Data = new JObject()
+                {
+                    ["message"] = errorEnum.ToString()//错误信息
+                }
+
             };
             await SendAsync(clientSocket, message.Serialize(), cancellationToken);
         }
