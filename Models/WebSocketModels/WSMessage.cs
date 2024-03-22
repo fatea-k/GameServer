@@ -7,7 +7,7 @@ namespace GameServer.Models
     /// <summary>
     /// 序列化的类
     /// </summary>
-    public class WebSocketMessage
+    public class WSMessage
     {
         
         //[JsonIgnore] JSON中该属性将被忽略
@@ -34,10 +34,10 @@ namespace GameServer.Models
         /// </summary>
         /// <param name="json"></param>
         /// <returns></returns>
-        public static WebSocketMessage Deserialize(string json) => JsonConvert.DeserializeObject<WebSocketMessage>(json);
+        public static WSMessage Deserialize(string json) => JsonConvert.DeserializeObject<WSMessage>(json);
 
         //设置错误信息的默认值
-        public WebSocketMessage()
+        public WSMessage()
         {
             Error = ErrorEnum.没有错误;
         }

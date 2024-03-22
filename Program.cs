@@ -1,4 +1,5 @@
 ﻿using GameServer.Handlers;
+using GameServer.Managers;
 using GameServer.Services;
 using GameServer.Utilities;
 using GameServer.WebSocketManager;
@@ -23,6 +24,13 @@ namespace GameServer
 
                 .BuildServiceProvider(); // 生成实际的服务提供器，以便在整个应用中使用
 
+            // 启动游戏配置初始化服务
+            ServiceProvider.GetRequiredService<GameConfigManager>(); // 触发服务的实例化，以便在运行时进行依赖注入
+
+            // 启动数据初始化服务
+            ServiceProvider.GetRequiredService<ConfigManager>(); // 触发服务的实例化，以便在运行时进行依赖注入
+
+
             // 使用容器运行WebSocket 服务器
             var server = ServiceProvider.GetRequiredService<WebSocketServer>();
             _ = server.Start();
@@ -34,7 +42,7 @@ namespace GameServer
             if (File.Exists(filePath))
             {
                 // 如果存在，则使用默认浏览器打开
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });
+               // System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });
 
             }
             else

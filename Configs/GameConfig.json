@@ -1,0 +1,37 @@
+{
+  //每个品质特性数量
+
+  "pinzhitexingConfig": {
+    "1": { //品质1
+      "BenefitsCount": 1, //增益数量
+      "PenaltiesCount": 1 //减益数量
+    },
+    "2": { //品质2
+      "BenefitsCount": 2, //增益数量
+      "PenaltiesCount": 2 //减益数量
+    },
+    "3": { //品质3
+      "BenefitsCount": 2, //增益数量
+      "PenaltiesCount": 1 //减益数量
+    },
+    "4": { //品质4
+      "BenefitsCount": 3, //增益数量
+      "PenaltiesCount": 2 //减益数量
+    },
+    "5": { //品质5
+      "BenefitsCount": 3, //增益数量
+      "PenaltiesCount": 1 //减益数量
+    },
+    "6": { //品质6
+      "BenefitsCount": 3, //增益数量
+      "PenaltiesCount": 0 //减益数量
+    },
+    "7": { //品质7
+      "BenefitsCount": 1, //增益数量
+      "PenaltiesCount": 0 //减益数量
+    }
+  }
+
+
+  // 其他配置
+}

@@ -1,0 +1,758 @@
+[
+  {
+    "Id": 10001,
+    "Quality": 1,
+    "Title": "碎石山村的农夫",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10002,
+    "Quality": 1,
+    "Title": "无名小镇的学徒",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10003,
+    "Quality": 1,
+    "Title": "流浪街头的艺人",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10004,
+    "Quality": 1,
+    "Title": "下等商人之家",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10005,
+    "Quality": 1,
+    "Title": "官宦人家的私生子",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10006,
+    "Quality": 1,
+    "Title": "边陲小城的舞女",
+    "Sex": 0,
+    "Odds": 100
+  },
+  {
+    "Id": 10007,
+    "Quality": 1,
+    "Title": "渔村中的孤儿",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10008,
+    "Quality": 1,
+    "Title": "深山中的挖药郎",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10009,
+    "Quality": 1,
+    "Title": "废弃矿区的孤儿",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10010,
+    "Quality": 1,
+    "Title": "花魁下的侍女",
+    "Sex": 0,
+    "Odds": 100
+  },
+  {
+    "Id": 10011,
+    "Quality": 1,
+    "Title": "破败祠堂守护者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10012,
+    "Quality": 1,
+    "Title": "行商的护卫",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10013,
+    "Quality": 1,
+    "Title": "迷途书童",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10014,
+    "Quality": 1,
+    "Title": "土匪之子",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10015,
+    "Quality": 1,
+    "Title": "孤峰渔夫",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10016,
+    "Quality": 1,
+    "Title": "小镇巫女",
+    "Sex": 0,
+    "Odds": 100
+  },
+  {
+    "Id": 10017,
+    "Quality": 1,
+    "Title": "过路马夫",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10018,
+    "Quality": 1,
+    "Title": "古董修复者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10019,
+    "Quality": 1,
+    "Title": "赌石行家",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10020,
+    "Quality": 1,
+    "Title": "仙灵湖畔守卫",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10021,
+    "Quality": 2,
+    "Title": "寒冰宗门遗孤",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10022,
+    "Quality": 2,
+    "Title": "枯井仙童",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10023,
+    "Quality": 2,
+    "Title": "炼丹师之子",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10024,
+    "Quality": 2,
+    "Title": "落魄书生",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10025,
+    "Quality": 2,
+    "Title": "采药山童",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10026,
+    "Quality": 2,
+    "Title": "夜行盲侠",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10027,
+    "Quality": 2,
+    "Title": "闲云野鹤",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10028,
+    "Quality": 2,
+    "Title": "星吟者后裔",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10029,
+    "Quality": 2,
+    "Title": "长乐小童",
+    "Sex": 0,
+    "Odds": 100
+  },
+  {
+    "Id": 10030,
+    "Quality": 2,
+    "Title": "早慧的豆腐娃",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10031,
+    "Quality": 2,
+    "Title": "织女后人",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10032,
+    "Quality": 2,
+    "Title": "矿洞幻化者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10033,
+    "Quality": 2,
+    "Title": "龙血舞者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10034,
+    "Quality": 2,
+    "Title": "奇门遁甲师",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10035,
+    "Quality": 2,
+    "Title": "隐村神童",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10036,
+    "Quality": 2,
+    "Title": "金陵世家",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10037,
+    "Quality": 2,
+    "Title": "神木村民",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10038,
+    "Quality": 2,
+    "Title": "丹霞行者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10039,
+    "Quality": 2,
+    "Title": "草庐隐者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10040,
+    "Quality": 2,
+    "Title": "飞檐走壁者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10041,
+    "Quality": 2,
+    "Title": "书香门第",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10042,
+    "Quality": 2,
+    "Title": "身法快手",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10043,
+    "Quality": 2,
+    "Title": "灵光秀才",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10044,
+    "Quality": 2,
+    "Title": "花匠之子",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10045,
+    "Quality": 2,
+    "Title": "虚空幡童",
+    "Sex": 1,
+    "Odds": 100
+  },
+  {
+    "Id": 10046,
+    "Quality": 2,
+    "Title": "药庐小助",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10047,
+    "Quality": 2,
+    "Title": "神器之灵",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10048,
+    "Quality": 2,
+    "Title": "百库之子",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10049,
+    "Quality": 2,
+    "Title": "习武少年",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10050,
+    "Quality": 2,
+    "Title": "古董商旅",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10051,
+    "Quality": 3,
+    "Title": "灵泉守护者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10052,
+    "Quality": 3,
+    "Title": "邪煞地穴",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10053,
+    "Quality": 3,
+    "Title": "刻印族裔",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10054,
+    "Quality": 3,
+    "Title": "霜林幼狐",
+    "Sex": 0,
+    "Odds": 100
+  },
+  {
+    "Id": 10055,
+    "Quality": 3,
+    "Title": "影界夜行",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10056,
+    "Quality": 3,
+    "Title": "九音仙姝",
+    "Sex": 0,
+    "Odds": 100
+  },
+  {
+    "Id": 10057,
+    "Quality": 3,
+    "Title": "武林遗孤",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10058,
+    "Quality": 3,
+    "Title": "仙药园丁",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10059,
+    "Quality": 3,
+    "Title": "紫云真传",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10060,
+    "Quality": 3,
+    "Title": "星辰后裔",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10061,
+    "Quality": 3,
+    "Title": "古木森灵",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10062,
+    "Quality": 3,
+    "Title": "海蚌姑娘",
+    "Sex": 0,
+    "Odds": 100
+  },
+  {
+    "Id": 10063,
+    "Quality": 3,
+    "Title": "长生谷子弟",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10064,
+    "Quality": 3,
+    "Title": "万灵谱抄录者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10065,
+    "Quality": 3,
+    "Title": "金丹地仙",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10066,
+    "Quality": 3,
+    "Title": "神官之嗣",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10067,
+    "Quality": 3,
+    "Title": "密林猎徒",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10068,
+    "Quality": 3,
+    "Title": "天灾幸存者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10069,
+    "Quality": 3,
+    "Title": "灵泉神童",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10070,
+    "Quality": 3,
+    "Title": "封印末裔",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10071,
+    "Quality": 3,
+    "Title": "魂石拾荒者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10072,
+    "Quality": 3,
+    "Title": "迷梦剧团",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10073,
+    "Quality": 4,
+    "Title": "翠云山修士",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10074,
+    "Quality": 4,
+    "Title": "炼魂师",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10075,
+    "Quality": 4,
+    "Title": "泽国水灵君",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10076,
+    "Quality": 4,
+    "Title": "若火丹童",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10077,
+    "Quality": 4,
+    "Title": "玄音府乐师",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10078,
+    "Quality": 4,
+    "Title": "飞云剑仙的弟子",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10079,
+    "Quality": 4,
+    "Title": "药山的隐士",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10080,
+    "Quality": 4,
+    "Title": "星辰陨落处",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10081,
+    "Quality": 4,
+    "Title": "无极剑派后人",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10082,
+    "Quality": 4,
+    "Title": "幽冥秘境的继承者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10083,
+    "Quality": 4,
+    "Title": "化蝶谷谷主之女",
+    "Sex": 0,
+    "Odds": 100
+  },
+  {
+    "Id": 10084,
+    "Quality": 4,
+    "Title": "九天玄女弟子",
+    "Sex": 0,
+    "Odds": 100
+  },
+  {
+    "Id": 10085,
+    "Quality": 4,
+    "Title": "虚空寂灵子",
+    "Sex": 1,
+    "Odds": 100
+  },
+  {
+    "Id": 10086,
+    "Quality": 4,
+    "Title": "紫微星宫观星者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10087,
+    "Quality": 4,
+    "Title": "渊海水族之裔",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10088,
+    "Quality": 4,
+    "Title": "影翳森罗侠",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10089,
+    "Quality": 4,
+    "Title": "炎凰之子",
+    "Sex": 1,
+    "Odds": 100
+  },
+  {
+    "Id": 10090,
+    "Quality": 4,
+    "Title": "毒龙沼泽之裔",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10091,
+    "Quality": 4,
+    "Title": "九转金丹宗传人",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10092,
+    "Quality": 4,
+    "Title": "昆仑山修者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10093,
+    "Quality": 5,
+    "Title": "天隙流光仙子",
+    "Sex": 0,
+    "Odds": 100
+  },
+  {
+    "Id": 10094,
+    "Quality": 5,
+    "Title": "花间飞燕",
+    "Sex": 1,
+    "Odds": 100
+  },
+  {
+    "Id": 10095,
+    "Quality": 5,
+    "Title": "龙吟谷谷主",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10096,
+    "Quality": 5,
+    "Title": "墨家机关弟子",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10097,
+    "Quality": 5,
+    "Title": "天阙星占师",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10098,
+    "Quality": 5,
+    "Title": "密云仙师",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10099,
+    "Quality": 5,
+    "Title": "五行藏经洞继承者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10100,
+    "Quality": 5,
+    "Title": "断剑山庄庄主之子",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10101,
+    "Quality": 5,
+    "Title": "古阵图腾后人",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10102,
+    "Quality": 5,
+    "Title": "苍穹铸星师",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10103,
+    "Quality": 6,
+    "Title": "天穹神脉之子",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10104,
+    "Quality": 6,
+    "Title": "天音仙宫继承者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10105,
+    "Quality": 6,
+    "Title": "九阳神君后裔",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10106,
+    "Quality": 6,
+    "Title": "灵泉秘境守护者",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10107,
+    "Quality": 6,
+    "Title": "太虚幻境真传",
+    "Sex": -1,
+    "Odds": 100
+  },
+  {
+    "Id": 10108,
+    "Quality": 7,
+    "Title": "天命之子",
+    "Sex": -1,
+    "Odds": 1
+  }
+]

@@ -29,7 +29,7 @@ namespace GameServer.WebSocketManager
         public async Task Start()
         {
             _httpListener.Start(); // 启动HttpListener实例
-            Console.WriteLine("WebSocket服务器已启动……");
+            Console.WriteLine("服务器已启动……");
 
             // 持续监听连接请求
             while (_httpListener.IsListening)
@@ -91,7 +91,7 @@ namespace GameServer.WebSocketManager
             _cancellationTokenSource.Cancel(); // 触发取消操作
             _httpListener.Stop(); // 停止HttpListener实例
             _httpListener.Close(); // 关闭HttpListener实例
-            Console.WriteLine("WebSocket服务器已关闭。");
+            Console.WriteLine("服务器已关闭。");
         }
     }
 }

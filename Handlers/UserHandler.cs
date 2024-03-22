@@ -18,7 +18,7 @@ namespace GameServer.Handlers
     //处理映射注册,注册action
     [HandlerMapping(UserActions.login)]
     [HandlerMapping(UserActions.register)]
-     
+
     // WebSocket消息处理器类，用于处理用户注册和登录
     /// <summary>
     /// 123123
@@ -37,18 +37,17 @@ namespace GameServer.Handlers
 
         #region 私有内容初始化
         private readonly UserService _userService;
-        private readonly ConnectionManager _connectionManager;
         #endregion
 
         /// <summary>
         /// 构造方法
         /// </summary>
         /// <param name="userService">用户内容处理服务器</param>
-        public UserHandler(UserService userService, ConnectionManager connectionManager)
+        public UserHandler(
+            UserService userService)
         {
             //依赖注入获得UserService服务
             _userService = userService;
-            _connectionManager = connectionManager;
         }
 
 
@@ -64,7 +63,7 @@ namespace GameServer.Handlers
         public async Task HandleMessageAsync(WebSocket clientSocket, string action, JObject data, CancellationToken cancellationToken)
         {
             //转为小写
-            action= action.ToLower();
+            action = action.ToLower();
             switch (action)
             {
                 case UserActions.register://跳转注册方法
@@ -89,51 +88,67 @@ namespace GameServer.Handlers
         /// <returns></returns>
         public async Task<User> RegisterAsync(WebSocket clientSocket, JObject data, string action, CancellationToken cancellationToken)
         {
-            //检查字典中是否有该链接
-          var userId=  ConnectionManager.GetUserIdByConnection(clientSocket);
 
-            if (string.IsNullOrEmpty(userId))
+            //解析出用户名和密码
+            var userName = data.Value<string>("username");
+            var password = data.Value<string>("password");
+           
+
+
+            //检查用户名和密码是否为空
+            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
             {
-                // 调用UserService注册用户
-                var user = await _userService.Register(data);
+                // 发送响应消息给客户端
+                await Clients.SendErrorAsync(clientSocket, action, ErrorEnum.用户名或密码为空, cancellationToken);
+                return null;
+            }
 
-                if (user != null)
+            //检查字典中是否有该链接
+            var userId = ConnectionManager.GetUserIdByConnection(clientSocket);
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                //当已字典中已存在,返回一个错误消息
+                await Clients.SendErrorAsync(clientSocket, action, ErrorEnum.用户已登录, cancellationToken);
+                return null;
+            }
+
+
+           
+                // 调用UserService注册用户
+                var user = await _userService.Register(userName, password);//如果数据库中有该用户,返回null
+
+                if (user != null) //当返回不为空,说明注册成功
                 {
                     // 添加用户ID与WebSocket连接到线程安全的字典
                     ConnectionManager.AddConcurrent(user.Id, clientSocket); // 使用TryAdd确保添加操作的原子性
 
+                // 随机分配一个角色
+                // var jObject = JObject.FromObject(_roleService.GetRoleBirth()); //JObject.FromObject(user);
+                //添加Userid到JObject
+                // var jObject.Add("userid", user.Id);
 
-                    // 将user对象序列化为JObject
-                    var jObject = JObject.FromObject(user);
-                    // 添加一个额外的自定义属性到此JObject
-                    jObject["message"] = "用户"+user.Id+"登录了";
+                var jObject= JObject.FromObject(user);
 
-                    var websocketmessage = new WebSocketMessage()
+                var websocketmessage = new WSMessage()
                     {
                         Action = action,
                         Data = jObject
                     };
-
                     // 发送响应消息给客户端
-                   await Clients.All.SendAsync(websocketmessage.Serialize(),0,0, cancellationToken);
+                    await Clients.All.SendAsync(websocketmessage.Serialize(), 0, 0, cancellationToken);
+
+
                 }
-                else
+                else//当返回为空,说明用户名已存在
                 {
                     // 发送响应消息给客户端
                     await Clients.SendErrorAsync(clientSocket, action, ErrorEnum.用户名已存在, cancellationToken);
                 }
 
                 return user;
-            }
-            else
-            {
-                //当已字典中已存在,返回一个错误消息
-                // 发送响应消息给客户端
-                await Clients.SendErrorAsync(clientSocket, action, ErrorEnum.无法注册, cancellationToken);
-                return null;
-            }
+            
 
-           
         }
 
         /// <summary>
@@ -146,38 +161,44 @@ namespace GameServer.Handlers
         /// <returns></returns>
         public async Task<User> LoginAsync(WebSocket clientSocket, JObject data, string action, CancellationToken cancellationToken)
         {
+            //解析出用户名和密码
+            var userName = data.Value<string>("username");
+            var password = data.Value<string>("password");
+            //检查用户名和密码是否为空
+            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
+            {
+                // 发送响应消息给客户端
+                await Clients.SendErrorAsync(clientSocket, action, ErrorEnum.用户名或密码为空, cancellationToken);
+                return null;
+            }
 
             // 调用UserService登录用户
-            var user = await _userService.Login(data);
+            var user = await _userService.Login(userName, password);
 
 
             // 检查用户是否成功登录
-            if (user != null)
+            if (user == null) //登录失败
             {
-                // 检查如果拥有旧的连接,踢掉旧的连接,并更字典新成新连接
-
+                // 发送错误消息给客户端
+                await Clients.SendErrorAsync(clientSocket, action, ErrorEnum.用户名或密码不正确, cancellationToken);
+            }
+            else
+            {
+                
                 // 添加用户ID与WebSocket连接到线程安全的字典
-                ConnectionManager.AddConcurrent(user.Id, clientSocket); // 使用TryAdd确保添加操作
+                ConnectionManager.AddConcurrent(user.Id, clientSocket); // 使用TryAdd确保添加操作,如果有旧链接 会更新成新的链接
 
                 //编辑返回的数据
-                var message = new WebSocketMessage()
+                var message = new WSMessage()
                 {
                     Action = action,
-                    Data = new JObject()
-                    {
-                        ["userId"] = user.Id
-                    }
+                    Data = JObject.FromObject(user)
                 };
 
                 // 发送响应消息给客户端
                 await Clients.SendAsync(clientSocket, message.Serialize(), cancellationToken);
             }
-            //登录失败
-            else
-            {
-                // 发送错误消息给客户端
-                await Clients.SendErrorAsync(clientSocket, action, ErrorEnum.用户名或密码不正确, cancellationToken);
-            }
+
             return user;
         }
 

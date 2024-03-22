@@ -90,7 +90,7 @@ namespace GameServer.WebSocketManager
                             await HandleAuthentication(action, data.ToObject<JObject>(), cancellationToken);
 
                         }
-                        else if ((action != "login" || action != "register")&&_isAuthenticated /* 用户已经通过登录认证 */)//注册和登录之外的操作
+                        else if ((action != "login" || action != "register") && _isAuthenticated /* 用户已经通过登录认证 */)//注册和登录之外的操作
                         {
                             // 处理已登录用户的其他操作
 
@@ -114,7 +114,7 @@ namespace GameServer.WebSocketManager
             catch (WebSocketException ex)
             {
                 // 如果在接收消息时发生异常，输出错误信息并关闭WebSocket连接
-                Console.WriteLine("WebSocket连接异常: " + ex.Message);
+                // Console.WriteLine("WebSocket连接异常: " + ex.Message);
                 // 如果WebSocket不是已关闭状态，尝试关闭WebSocket连接
                 CloseConnectionAsycn(WebSocketCloseStatus.NormalClosure, "连接异常", CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
             }
@@ -145,7 +145,7 @@ namespace GameServer.WebSocketManager
             if (_webSocket.State != WebSocketState.Closed)
             {
                 ConnectionManager.RemoveConnectionByWebSocket(_webSocket);
-                await _webSocket.CloseAsync(closeStatus, errmessage, cancellationToken);
+                await _webSocket.CloseAsync(closeStatus, errmessage, CancellationToken.None);
             }
 
         }
@@ -160,24 +160,36 @@ namespace GameServer.WebSocketManager
         /// <returns></returns>
         private async Task HandleAuthentication(string action, JObject data, CancellationToken cancellationToken)
         {
-            var userHandler = _serviceProvider.GetRequiredService<UserHandler>();
-            if (action == "login")
+            try
             {
-                _isAuthenticated = await userHandler.LoginAsync(_webSocket, data, action, cancellationToken) != null;
-            }
-            else if (action == "register")
-            {
-                _isAuthenticated = await userHandler.RegisterAsync(_webSocket, data, action, cancellationToken) != null;
-            }
+                // 调用UserHandler的LoginAsync或RegisterAsync方法进行用户认证
+                var userHandler = _serviceProvider.GetRequiredService<UserHandler>();
 
-            if (_isAuthenticated)
-            {
-                // 初始化心跳时间
-                _lastHeartbeat = DateTimeOffset.UtcNow;
 
-                // 启动或重置心跳定时器
-                _heartbeatTimer?.Dispose(); // 如果计时器已经存在，则先释放
-                _heartbeatTimer = new Timer(CheckHeartbeatTimeout, null, HeartbeatInterval, HeartbeatInterval);
+
+                if (action == "login")
+                {
+                    _isAuthenticated = await userHandler.LoginAsync(_webSocket, data, action, cancellationToken) != null;
+                }
+                else if (action == "register")
+                {
+                    _isAuthenticated = await userHandler.RegisterAsync(_webSocket, data, action, cancellationToken) != null;
+                }
+
+                if (_isAuthenticated)
+                {
+                    // 初始化心跳时间
+                    _lastHeartbeat = DateTimeOffset.UtcNow;
+
+                    // 启动或重置心跳定时器
+                    _heartbeatTimer?.Dispose(); // 如果计时器已经存在，则先释放
+                    _heartbeatTimer = new Timer(CheckHeartbeatTimeout, null, HeartbeatInterval, HeartbeatInterval);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("用户认证失败: " + ex.Message);
+                return;
             }
         }
 

@@ -32,6 +32,12 @@ namespace GameServer.Managers
         // 默认的消息发送超时时间，单位为毫秒
         private static readonly int _defaultTimeoutMs = 10000; // 默认超时时间为10秒
 
+        //构造函数
+        public MessageManagner()
+        {
+            //输出日志
+            Console.WriteLine("MessageManagner inited");
+        }
         /// <summary>
         /// 将消息入队至指定的消息通道，并根据条件开始异步处理。
         /// </summary>
